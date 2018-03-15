@@ -706,14 +706,14 @@ class Worksheet(_WorkbookChild):
 
         self.merged_cells.add(cr.coord)
 
-        min_col, min_row, max_col, max_row = cr.bounds
-        rows = range(min_row, max_row+1)
-        cols = range(min_col, max_col+1)
-        cells = product(rows, cols)
-        # all but the top-left cell are removed
-        for c in islice(cells, 1, None):
-            if c in self._cells:
-                del self._cells[c]
+        # min_col, min_row, max_col, max_row = cr.bounds
+        # rows = range(min_row, max_row+1)
+        # cols = range(min_col, max_col+1)
+        # cells = product(rows, cols)
+        # # all but the top-left cell are removed
+        # for c in islice(cells, 1, None):
+        #    if c in self._cells:
+        #        del self._cells[c]
 
 
     @property
