@@ -3,6 +3,8 @@ from __future__ import absolute_import
 import pytest
 
 from copy import copy
+from ..worksheet import Worksheet
+from openpyxl.workbook import Workbook
 
 @pytest.fixture
 def CellRange():
@@ -128,15 +130,44 @@ class TestCellRange:
             assert cr1 & cr2 == CellRange("A1")
 
 
-    def test_isdisjoint(self, CellRange):
+    def test_isdisjoint_order(self, CellRange):
+        ''' Order of the test does not matter '''
         cr1 = CellRange("E5:K10")
         cr2 = CellRange("A1:C12")
+        assert cr1.isdisjoint(cr2) is cr2.isdisjoint(cr1)
+
+
+    def test_isdisjoint_by_col(self, CellRange):
+        ''' Tested ranges differ only by columns '''
+        cr1 = CellRange("E5:K10")
+        cr2 = CellRange("A5:C10")
+        assert cr1.isdisjoint(cr2) is True
+
+
+    def test_isdisjoint_by_row(self, CellRange):
+        ''' Tested ranges differ only by rows '''
+        cr1 = CellRange("E5:K10")
+        cr2 = CellRange("E12:K12")
+        assert cr1.isdisjoint(cr2) is True
+
+
+    def test_isdisjoint_in_both(self, CellRange):
+        ''' Tested ranges differ in both rows and columns '''
+        cr1 = CellRange("A1:B2")
+        cr2 = CellRange("D4")
         assert cr1.isdisjoint(cr2) is True
 
 
     def test_is_not_disjoint(self, CellRange):
         cr1 = CellRange("E5:K10")
         cr2 = CellRange("D2:F7")
+        assert cr1.isdisjoint(cr2) is False
+
+
+    def test_is_not_disjoint_in_both(self, CellRange):
+        ''' Tested ranges overlap in both rows and columns '''
+        cr1 = CellRange("A1:D4")
+        cr2 = CellRange("B2:C3")
         assert cr1.isdisjoint(cr2) is False
 
 
@@ -180,10 +211,11 @@ class TestCellRange:
                                  ("Sheet1!A1:B4", "D5:E5", None),
                              ]
     )
-    def test_check_title(self, CellRange,r1, r2, expected):
+    def test_check_title(self, CellRange, r1, r2, expected):
         cr1 = CellRange(r1)
         cr2 = CellRange(r2)
         assert cr1._check_title(cr2) is expected
+
 
     @pytest.mark.parametrize("r1, r2",
                              [
@@ -210,6 +242,15 @@ class TestCellRange:
         assert cr1 > cr2
 
 
+    def test_edge_cells(self,CellRange):
+        cr = CellRange("A1:C3")
+        assert cr.top == [(1,1), (1,2), (1,3)]
+        assert cr.bottom == [(3,1), (3,2), (3,3)]
+        assert cr.left == [(1,1), (2,1), (3,1)]
+        assert cr.right == [(1,3), (2,3), (3,3)]
+
+
+
 @pytest.fixture
 def MultiCellRange():
     from ..cell_range import MultiCellRange
@@ -230,11 +271,25 @@ class TestMultiCellRange:
         assert cells.ranges == [CellRange("A1"), CellRange("B2:B5")]
 
 
-    def test_add(self, MultiCellRange, CellRange):
+    def test_add_coord(self, MultiCellRange, CellRange):
         cr = CellRange("A1")
         cells = MultiCellRange(ranges=[cr])
-        cells += "B2"
+        cells.add("B2")
         assert cells.ranges == [cr, CellRange("B2")]
+
+
+    def test_add_cell_range(self, MultiCellRange, CellRange):
+        cr1 = CellRange("A1")
+        cr2 = CellRange("B2")
+        cells = MultiCellRange(ranges=[cr1])
+        cells.add(cr2)
+        assert cells.ranges == [cr1, cr2]
+
+
+    def test_iadd(self, MultiCellRange):
+        cells = MultiCellRange()
+        cells.add('A1')
+        assert cells == "A1"
 
 
     def test_avoid_duplicates(self, MultiCellRange):
@@ -295,3 +350,10 @@ class TestMultiCellRange:
     def test_iter(self, MultiCellRange, CellRange):
         cells = MultiCellRange("A1")
         assert list(cells) == [CellRange("A1")]
+
+
+    def test_copy(self, MultiCellRange, CellRange):
+        r1 = MultiCellRange("A1")
+        from copy import copy
+        r2 = copy(r1)
+        assert list(r1)[0] is not list(r2)[0]

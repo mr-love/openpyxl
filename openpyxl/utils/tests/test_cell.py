@@ -5,12 +5,12 @@ import pytest
 
 from .. import (
     column_index_from_string,
-    coordinate_from_string,
     get_column_letter,
     absolute_coordinate,
     get_column_interval,
 )
 
+from ..cell import coordinate_from_string
 
 def test_coordinates():
     assert coordinate_from_string('ZF46') == ("ZF", 46)
@@ -119,10 +119,12 @@ def test_invalid_range():
 
 @pytest.mark.parametrize("title, quoted",
                          [
-                             (u'In D\xfcsseldorf', u"'In D\xfcsseldorf'"),
+                             (u'In Dusseldorf', u"'In Dusseldorf'"),
                              (u'My-Sheet', u"'My-Sheet'"),
                              (u"Demande d'autorisation", "'Demande d''autorisation'"),
-                             (u"d'autorisation", "'d''autorisation'"),
+                             ("1sheet", "'1sheet'"),
+                             (".sheet", "'.sheet'"),
+                             ('"', "'\"'"),
                          ]
                          )
 def test_quote_sheetname(title, quoted):

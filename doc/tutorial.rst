@@ -199,7 +199,7 @@ or the :func:`openpyxl.worksheet.Worksheet.columns` property::
 
 
 Data storage
-++++++++++++
+------------
 
 Once we have a :class:`openpyxl.cell.Cell`, we can assign it a value::
 
@@ -211,25 +211,9 @@ Once we have a :class:`openpyxl.cell.Cell`, we can assign it a value::
     >>> print(d.value)
     3.14
 
-You can also enable type and format inference::
-
-    >>> wb = Workbook(guess_types=True)
-    >>> c.value = '12%'
-    >>> print(c.value)
-    0.12
-
-    >>> import datetime
-    >>> d.value = datetime.datetime.now()
-    >>> print d.value
-    datetime.datetime(2010, 9, 10, 22, 25, 18)
-
-    >>> c.value = '31.50'
-    >>> print(c.value)
-    31.5
-
 
 Saving to a file
-================
+++++++++++++++++
 
 The simplest and safest way to save a workbook is by using the
 :func:`openpyxl.workbook.Workbook.save()` method of the
@@ -250,6 +234,24 @@ The simplest and safest way to save a workbook is by using the
 
     As OOXML files are basically ZIP files, you can also end the filename
     with .zip and open it with your favourite ZIP archive manager.
+
+
+Saving as a stream
+++++++++++++++++++
+
+If you want to save the file to a stream, e.g. when using a web application
+such as Pyramid, Flask or Django then you can simply provide a
+`NamedTemporaryFile`::
+
+
+    >>> from tempfile import NamedTemporaryFile
+    >>> from openpyxl import Workbook
+    >>> wb = Workbook()
+    >>> with NamedTemporaryFile() as tmp:
+            wb.save(tmp.name)
+            tmp.seek(0)
+            stream = tmp.read()
+
 
 You can specify the attribute `template=True`, to save a workbook
 as a template::
@@ -302,7 +304,7 @@ open an existing workbook::
 
     >>> from openpyxl import load_workbook
     >>> wb2 = load_workbook('test.xlsx')
-    >>> print wb2.get_sheet_names()
+    >>> print wb2.sheetnames
     ['Sheet2', 'New Title', 'Sheet1']
 
 This ends the tutorial for now, you can proceed to the :doc:`usage` section

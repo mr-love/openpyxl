@@ -155,11 +155,6 @@ class TestDefinition:
                  "3.14",
                  "NUMBER"
                  ),
-                ("""<definedName name="pi">3.14</definedName>""",
-                 "pi",
-                 "3.14",
-                 "NUMBER"
-                 ),
                 ("""<definedName name="name">"charlie"</definedName>""",
                  "name",
                  '"charlie"',
@@ -307,9 +302,10 @@ class TestDefinitionList:
             xml = src.read()
         node = fromstring(xml)
         dl = DefinedNameList.from_tree(node)
-        assert len(dl) == 4
+        assert len(dl) == 5
         dl._cleanup()
         assert len(dl) == 2
+        assert dl.get("_xlnm._FilterDatabase", 0) is None
 
 
     def test_localnames(self, DefinedNameList, datadir):
@@ -319,3 +315,20 @@ class TestDefinitionList:
         node = fromstring(xml)
         dl = DefinedNameList.from_tree(node)
         assert dl.localnames(0) == ['MySheetRef', 'MySheetValue']
+
+
+    @pytest.mark.parametrize("name, scope, result",
+                             [
+                                 ("MySheetValue", None, False),
+                                 ("MySheetValue", 0, True),
+                                 ("MySheetValue", 1, True),
+                             ]
+                             )
+    def test_get(self, DefinedNameList, datadir, name, scope, result):
+        datadir.chdir()
+        with open("workbook.xml", "rb") as src:
+            xml = src.read()
+        node = fromstring(xml)
+        dl = DefinedNameList.from_tree(node)
+        check = dl.get(name, scope) is not None
+        assert check is result

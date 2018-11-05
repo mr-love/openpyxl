@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 """Workbook is the top-level container for all document information."""
 
-from openpyxl.compat import deprecated
+from openpyxl.compat import deprecated, long
 from openpyxl.worksheet import Worksheet
 from openpyxl.worksheet.read_only import ReadOnlyWorksheet
 from openpyxl.worksheet.write_only import WriteOnlyWorksheet
@@ -14,7 +14,7 @@ from openpyxl.utils.indexed_list import IndexedList
 from openpyxl.utils.datetime  import CALENDAR_WINDOWS_1900
 from openpyxl.utils.exceptions import ReadOnlyWorkbookException
 
-from openpyxl.writer.excel import save_workbook, save_dump
+from openpyxl.writer.excel import save_workbook
 
 from openpyxl.styles.cell_style import StyleArray
 from openpyxl.styles.named_styles import NamedStyle
@@ -32,6 +32,7 @@ from openpyxl.chartsheet import Chartsheet
 from .defined_name import DefinedName, DefinedNameList
 from openpyxl.packaging.core import DocumentProperties
 from openpyxl.packaging.relationship import RelationshipList
+from .child import _WorkbookChild
 from .protection import DocumentSecurity
 from .properties import CalcProperties
 from .views import BookView
@@ -44,13 +45,13 @@ from openpyxl.xml.constants import (
     XLTX
 )
 
+INTEGER_TYPES = (int, long)
 
 class Workbook(object):
     """Workbook is the container for all other parts of the document."""
 
     _read_only = False
     _data_only = False
-    _keep_links = True
     template = False
     path = "/xl/workbook.xml"
 
@@ -75,7 +76,7 @@ class Workbook(object):
         self.is_template = False
         self._differential_styles = DifferentialStyleList()
         self.code_name = None
-        self.excel_base_date = CALENDAR_WINDOWS_1900
+        self.epoch = CALENDAR_WINDOWS_1900
         self.encoding = "utf-8"
         self.iso_dates = iso_dates
 
@@ -125,14 +126,26 @@ class Workbook(object):
     def write_only(self):
         return self.__write_only
 
+
     @property
-    def keep_links(self):
-        return self._keep_links
+    def guess_types(self):
+        return getattr(self, '__guess_types', False)
+
+
+    @guess_types.setter
+    def guess_types(self, value):
+        self.__guess_types = value
+
 
     @deprecated("Use the .active property")
     def get_active_sheet(self):
         """Returns the current active sheet."""
         return self.active
+
+
+    @property
+    def excel_base_date(self):
+        return self.epoch
 
     @property
     def active(self):
@@ -148,7 +161,23 @@ class Workbook(object):
     @active.setter
     def active(self, value):
         """Set the active sheet"""
-        self._active_sheet_index = value
+        if not isinstance(value, (_WorkbookChild, INTEGER_TYPES)):
+            raise TypeError("Value must be either a worksheet, chartsheet or numerical index")
+        if isinstance(value, INTEGER_TYPES):
+            self._active_sheet_index = value
+            return
+            #if self._sheets and 0 <= value < len(self._sheets):
+                #value = self._sheets[value]
+            #else:
+                #raise ValueError("Sheet index is outside the range of possible values", value)
+        if value not in self._sheets:
+            raise ValueError("Worksheet is not in the workbook")
+        if value.sheet_state != "visible":
+            raise ValueError("Only visible sheets can be made active")
+
+        idx = self._sheets.index(value)
+        self._active_sheet_index = idx
+
 
     def create_sheet(self, title=None, index=None):
         """Create a worksheet (at an optional index).
@@ -361,10 +390,9 @@ class Workbook(object):
         """
         if self.read_only:
             raise TypeError("""Workbook is read-only""")
-        if self.write_only:
-            save_dump(self, filename)
-        else:
-            save_workbook(self, filename)
+        if self.write_only and not self.worksheets:
+            self.create_sheet()
+        save_workbook(self, filename)
 
 
     @property

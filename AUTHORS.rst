@@ -10,10 +10,12 @@ Thanks to all those who participate in the project (in alphabetical order):
 * Day Barr
 * Stefan Behnel
 * Bernt R. Brenna
+* Israel Barth Rubio
 * Sven Burk
 * Max Bolingbroke
 * Anders Chrigstrom
 * ccoacley
+* Alessandro Cucci
 * Maarten De Paepe
 * Etienne Desautels
 * Dmitriy Chernyshov
@@ -21,7 +23,9 @@ Thanks to all those who participate in the project (in alphabetical order):
 * Alexandre Fayolle
 * Don Freeman
 * Eric Gazoni
+* Dominik Geldmacher
 * Brice Gelineau
+* Mark Gemmill
 * Alex Gronholm
 * Yaroslav Halchenko
 * Fumito Hamamura
@@ -32,6 +36,7 @@ Thanks to all those who participate in the project (in alphabetical order):
 * Eric Hurkman
 * Jean Pierre Huart
 * JarekPS
+* Paul Joyce
 * Heikki Junes
 * Chi Ho Kwok
 * Yingjie Lan
@@ -55,11 +60,13 @@ Thanks to all those who participate in the project (in alphabetical order):
 * Ted Pollari
 * Elias Rabel
 * Rick Rankin
+* Stephen Rauch
 * ramn_se
 * Philip Roche
 * Wojciech Rola
 * James Smagala
 * Wolfgane Scherer
+* Magnus Schieder
 * Joseph Tate
 * Gar Thompson
 * Dieter Vandenbussche
@@ -69,6 +76,7 @@ Thanks to all those who participate in the project (in alphabetical order):
 * Laurent Vasseur
 * Kay Webber
 * Shibukawa Yoshiki
+* Masato Yoshida
 
 Project logo designed by Eric Gazoni, font by claudeserieux
 (http://www.dafont.com/profile.php?user=337503)

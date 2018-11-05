@@ -1,3 +1,155 @@
+2.6-a1 (unreleased)
+=====================
+
+
+Major changes
+-------------
+
+* Implement robust for merged cells so that these can be formatted the way Excel does without confusion. Thanks to Magnus Schieder.
+
+
+Minor changes
+-------------
+
+* Add support for worksheet scenarios
+* Add read support for chartsheets
+* Add method for moving ranges of cells on a worksheet
+* Last version to support Python 2.7
+
+
+Deprecations
+------------
+
+* Type inference and coercion for cell values
+
+
+2.5.10 (unreleased)
+===================
+
+
+Pull Requests
+-------------
+
+* PR285 <https://bitbucket.org/openpyxl/openpyxl/pull-requests/285>`_Tokenizer failure for quoted sheet name in second half of range
+
+2.5.9 (2018-10-19)
+==================
+
+
+Bugfixes
+--------
+
+* `#1000 <https://bitbucket.org/openpyxl/openpyxl/issues/1000>`_ Clean AutoFilter name definitions
+* `#1106 <https://bitbucket.org/openpyxl/openpyxl/issues/1106>`_ Attribute missing from Shape object
+* `#1109 <https://bitbucket.org/openpyxl/openpyxl/issues/1109>`_ Failure to read all DrawingML means workbook can't be read
+
+
+Pull Requests
+-------------
+
+* `PR281 <https://bitbucket.org/openpyxl/openpyxl/pull-requests/281>`_ Allow newlines in formulae
+* `PR284 <https://bitbucket.org/openpyxl/openpyxl/pull-requests/284>`_ Fix whitespace in front of infix operator in formulae
+
+
+2.5.8 (2018-09-25)
+==================
+
+
+* `#877 <https://bitbucket.org/openpyxl/openpyxl/issues/877>`_ Cannot control how missing values are displayed in charts.
+* `#948 <https://bitbucket.org/openpyxl/openpyxl/issues/948>`_ Cell references can't be used for chart titles
+* `#1095 <https://bitbucket.org/openpyxl/openpyxl/issues/1095>`_ Params in iter_cols and iter_rows methods are slightly wrong.
+
+
+2.5.7 (2018-09-13)
+==================
+
+
+* `#954 <https://bitbucket.org/openpyxl/openpyxl/issues/954>`_ Sheet title containing % need quoting in references
+* `#1047 <https://bitbucket.org/openpyxl/openpyxl/issues/1047>`_ Cannot set quote prefix
+* `#1093 <https://bitbucket.org/openpyxl/openpyxl/issues/1093>`_ Pandas timestamps raise KeyError
+
+
+2.5.6 (2018-08-30)
+==================
+
+
+* `#832 <https://bitbucket.org/openpyxl/openpyxl/issues/832>`_ Read-only mode can leave find-handles open when reading dimensions
+* `#933 <https://bitbucket.org/openpyxl/openpyxl/issues/933>`_ Set a worksheet directly as active
+* `#1086 <https://bitbucket.org/openpyxl/openpyxl/issues/1086>`_ Internal row counter not adjusted when rows are deleted or inserted
+
+
+2.5.5 (2018-08-04)
+==================
+
+
+Bugfixes
+--------
+
+* `#1049 <https://bitbucket.org/openpyxl/openpyxl/issues/1049>`_ Files with Mac epoch are read incorrectly
+* `#1058 <https://bitbucket.org/openpyxl/openpyxl/issues/1058>`_ Cannot copy merged cells
+* `#1066 <https://bitbucket.org/openpyxl/openpyxl/issues/1066>`_ Cannot access ws.active_cell
+
+
+Pull Requests
+-------------
+
+* `PR267 <https://bitbucket.org/openpyxl/openpyxl/pull-requests/267/image-read>`_ Introduce read-support for images
+
+
+2.5.4 (2018-06-07)
+==================
+
+
+Bugfixes
+--------
+
+* `#1025 <https://bitbucket.org/openpyxl/openpyxl/issues/1025>`_ Cannot read files with 3D charts.
+* `#1030 <https://bitbucket.org/openpyxl/openpyxl/issues/1030>`_ Merged cells take a long time to parse
+
+
+Minor changes
+-------------
+
+* Improve read support for pivot tables and don't always create a Filters child for filterColumn objects.
+* `Support folding rows` <https://bitbucket.org/openpyxl/openpyxl/pull-requests/259/fold-rows>`_
+
+
+2.5.3 (2018-04-18)
+==================
+
+
+Bugfixes
+--------
+
+* `#983 <https://bitbucket.org/openpyxl/openpyxl/issues/983>`_ Warning level too aggressive.
+* `#1015 <https://bitbucket.org/openpyxl/openpyxl/issues/1015>`_ Alignment and protection values not saved for named styles.
+* `#1017 <https://bitbucket.org/openpyxl/openpyxl/issues/1017>`_ Deleting elements from a legend doesn't work.
+* `#1018 <https://bitbucket.org/openpyxl/openpyxl/issues/1018>`_ Index names repeated for every row in dataframe.
+* `#1020 <https://bitbucket.org/openpyxl/openpyxl/issues/1020>`_ Worksheet protection not being stored.
+* `#1023 <https://bitbucket.org/openpyxl/openpyxl/issues/1023>`_ Exception raised when reading a tooltip.
+
+
+2.5.2 (2018-04-06)
+==================
+
+
+Bugfixes
+--------
+
+* `#949 <https://bitbucket.org/openpyxl/openpyxl/issues/949>`_ High memory use when reading text-heavy files.
+* `#970 <https://bitbucket.org/openpyxl/openpyxl/issues/970>`_ Copying merged cells copies references.
+* `#978 <https://bitbucket.org/openpyxl/openpyxl/issues/978>`_ Cannot set comment size.
+* `#985 <https://bitbucket.org/openpyxl/openpyxl/issues/895>`_ Exception when trying to save workbooks with no views.
+* `#995 <https://bitbucket.org/openpyxl/openpyxl/issues/995>`_ Cannot delete last row or column.
+* `#1002 <https://bitbucket.org/openpyxl/openpyxl/issues/1002>`_ Cannot read Drawings containing embedded images.
+
+
+Minor changes
+-------------
+
+* Support for dataframes with multiple columns and multiple indices.
+
+
 2.5.1 (2018-03-12)
 ==================
 

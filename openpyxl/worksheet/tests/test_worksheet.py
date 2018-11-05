@@ -7,8 +7,10 @@ from itertools import islice
 
 # package imports
 from openpyxl.workbook import Workbook
-from openpyxl.cell import Cell
+from openpyxl.cell import Cell, MergedCell
 from openpyxl.utils.exceptions import NamedRangeException
+
+from ..cell_range import CellRange
 
 
 class DummyWorkbook:
@@ -58,19 +60,6 @@ class TestWorksheet:
         assert 'B12:B12' == ws.calculate_dimension()
 
 
-    def test_squared_range(self, Worksheet):
-        ws = Worksheet(Workbook())
-        expected = [
-            ('A1', 'B1', 'C1'),
-            ('A2', 'B2', 'C2'),
-            ('A3', 'B3', 'C3'),
-            ('A4', 'B4', 'C4'),
-        ]
-        rows = ws.get_squared_range(1, 1, 3, 4)
-        for row, coord in zip(rows, expected):
-            assert tuple(c.coordinate for c in row) == coord
-
-
     @pytest.mark.parametrize("row, column, coordinate",
                              [
                                  (1, 0, 'A1'),
@@ -100,63 +89,16 @@ class TestWorksheet:
             assert tuple(c.coordinate for c in row) == coord
 
 
-    def test_iter_rows_offset(self, Worksheet):
-        ws = Worksheet(Workbook())
-        rows = ws.iter_rows(min_row=1, min_col=1, max_row=4, max_col=3,
-                            row_offset=1, column_offset=3)
-        expected = [
-            ('D2', 'E2', 'F2'),
-            ('D3', 'E3', 'F3'),
-            ('D4', 'E4', 'F4'),
-            ('D5', 'E5', 'F5'),
-        ]
-
-        for row, coord in zip(rows, expected):
-            assert tuple(c.coordinate for c in row) == coord
-
-
-    def test_get_named_range(self, Worksheet):
-        wb = Workbook()
-        ws = wb.active
-        wb.create_named_range('test_range', ws, value='C5')
-        xlrange = tuple(ws.get_named_range('test_range'))
-        cell = xlrange[0]
-        assert isinstance(cell, Cell)
-        assert cell.row == 5
-
-
-    def test_get_bad_named_range(self, Worksheet):
-        ws = Worksheet(Workbook())
-        with pytest.raises(KeyError):
-            ws.get_named_range('bad_range')
-
-
-    def test_get_named_range_wrong_sheet(self, Worksheet):
-        wb = Workbook()
-        ws1 = wb.create_sheet("Sheet1")
-        ws2 = wb.create_sheet("Sheet2")
-        wb.create_named_range('wrong_sheet_range', ws1, 'C5')
-        with pytest.raises(NamedRangeException):
-            ws2.get_named_range('wrong_sheet_range')
-
-
     def test_cell_alternate_coordinates(self, Worksheet):
         ws = Worksheet(Workbook())
         cell = ws.cell(row=8, column=4)
         assert 'D8' == cell.coordinate
 
+
     def test_cell_insufficient_coordinates(self, Worksheet):
         ws = Worksheet(Workbook())
         with pytest.raises(TypeError):
             ws.cell(row=8)
-
-    def test_cell_range_name(self):
-        wb = Workbook()
-        ws = wb.active
-        wb.create_named_range('test_range_single', ws, 'B12')
-        c_range_name = ws.get_named_range('test_range_single')
-        c_cell = ws['B12']
-        assert c_range_name == (c_cell,)
 
 
     def test_hyperlink_value(self, Worksheet):
@@ -424,7 +366,7 @@ class TestWorksheet:
         assert (4, 4) in ws._cells
         ws.merge_cells(range_string="A1:D4")
         assert ws.merged_cells == "A1:D4"
-        assert (4, 4) not in ws._cells
+        assert ws.cell(4, 4).__class__.__name__ == "MergedCell"
         assert (1, 1) in ws._cells
 
 
@@ -460,18 +402,6 @@ class TestWorksheet:
         assert ws.merged_cells == ""
 
 
-    @pytest.mark.parametrize("value, result, rows_cols",
-                             [
-                                 (3, "1:3", None),
-                                 (4, "A:D", "cols")
-                             ])
-    def test_print_title_old(self, value, result, rows_cols):
-        wb = Workbook()
-        ws = wb.active
-        ws.add_print_title(value, rows_cols)
-        assert ws.print_titles == result
-
-
     @pytest.mark.parametrize("rows, cols, titles",
                              [
                                 ("1:4", None, "1:4"),
@@ -498,6 +428,21 @@ class TestWorksheet:
         ws = wb.active
         ws.print_area = cell_range
         assert ws.print_area == result
+
+
+    def test_active_cell(self, Worksheet):
+        ws = Worksheet(Workbook())
+        assert ws.active_cell == 'A1'
+
+
+    def test_selected_cell(self, Worksheet):
+        ws = Worksheet(Workbook())
+        assert ws.selected_cell == 'A1'
+
+
+    def test_gridlines(self, Worksheet):
+        ws = Worksheet(Workbook())
+        assert not ws.show_gridlines
 
 
 def test_freeze_panes_horiz(Worksheet):
@@ -612,7 +557,7 @@ class TestEditableWorksheet:
         ws = dummy_worksheet
         assert ws.max_column == 8
 
-        ws._move_cells(min_col=3, offset=2, row_or_col="col_idx")
+        ws._move_cells(min_col=3, offset=2, row_or_col="column")
 
         assert ws.max_column == 10
         assert [c.value for c in ws['D']] == [None]*6
@@ -634,6 +579,7 @@ class TestEditableWorksheet:
         ws.insert_rows(2, 2)
 
         assert ws.max_row == 8
+        assert ws._current_row == 8
         assert [c.value for c in ws[2]] == [None]*8
 
 
@@ -652,7 +598,17 @@ class TestEditableWorksheet:
         ws.delete_rows(2, 3)
 
         assert ws.max_row == 3
+        assert ws._current_row == 3
         assert [c.value for c in ws['B']] == ['B1', 'B5', 'B6']
+
+
+    def test_deleta_all_rows(self, dummy_worksheet):
+        ws = dummy_worksheet
+
+        ws.delete_rows(1, 6)
+
+        assert ws.max_row == 1
+        assert ws._current_row == 0
 
 
     def test_delete_cols(self, dummy_worksheet):
@@ -684,12 +640,13 @@ class TestEditableWorksheet:
 
     @pytest.mark.parametrize("idx, offset, max_val, remainder",
                              [
-                                 (1, 3, 6, set()),
-                                 (2, 3, 6, set([4])),
-                                 (3, 3, 6, set([4, 5])),
-                                 (4, 3, 6, set([4, 5])),
-                                 (5, 3, 6, set([5])),
-                                 (6, 3, 6, set()),
+                                 (1, 3, 6, {4}),
+                                 (2, 3, 6, {4, 5}),
+                                 (3, 3, 6, {4, 5, 6}),
+                                 (4, 3, 6, {4, 5, 6}),
+                                 (5, 3, 6, {5, 6}),
+                                 (6, 3, 6, {6}),
+                                 (6, 1, 6, {6}),
                              ]
                              )
     def test_remainder(self, dummy_worksheet, idx, offset, max_val, remainder):
@@ -697,3 +654,101 @@ class TestEditableWorksheet:
         ws = dummy_worksheet
 
         assert set(_gutter(idx, offset, max_val)) == remainder
+
+
+    def test_delete_last_col(self, dummy_worksheet):
+        ws = dummy_worksheet
+        ws.delete_cols(8)
+        assert ws.max_column == 7
+        assert ws['H8'].value == None
+
+
+    def test_delete_last_row(self, dummy_worksheet):
+        ws = dummy_worksheet
+        ws.delete_rows(6)
+        assert ws.max_row == 5
+        assert ws['A6'].value == None
+
+
+    def test_move_cell(self, dummy_worksheet):
+        ws = dummy_worksheet
+        ws._move_cell(1, 1, 3, 6)
+        cell = ws['G4']
+        assert cell.value == 'A1'
+        assert cell.coordinate == 'G4'
+        assert ws['A1'].value is None
+
+
+    @pytest.mark.parametrize("translate, formula, result",
+                             [
+                                 (False, "=SUM(G1:G3)", "=SUM(G1:G3)"),
+                                 (True, "=SUM(G1:G3)", "=SUM(I2:I4)"),
+                                 (True, "I2:I4", "I2:I4"),
+                             ]
+                             )
+    def test_move_translated_fomula(self, dummy_worksheet, translate, formula, result):
+        ws = dummy_worksheet
+        cell = ws['G4']
+        cell.value = formula
+        ws._move_cell(row=4, column=7, row_offset=1, col_offset=2, translate=translate)
+        moved = ws['I5']
+        assert moved.value == result
+
+
+    def test_move_nothing(self, dummy_worksheet):
+        ws = dummy_worksheet
+        ws.move_range("B2:E5")
+        assert ws['B2'].value == "B2"
+
+
+    def test_move_range_down(self, dummy_worksheet):
+        ws = dummy_worksheet
+        cr = CellRange("B2:E5")
+        ws.move_range(cr, rows=2)
+        assert ws['B4'].value == "B2"
+        assert cr.coord == "B4:E7"
+
+
+    def test_move_range_up(self, dummy_worksheet):
+        ws = dummy_worksheet
+        cr = CellRange("B4:E5")
+        ws.move_range(cr, rows=-2)
+        assert ws['B2'].value == "B4"
+        assert cr.coord == "B2:E3"
+
+
+    def test_move_range_right(self, dummy_worksheet):
+        ws = dummy_worksheet
+        cr = CellRange("B2:E5")
+        ws.move_range(cr, cols=2)
+        assert ws['D2'].value == "B2"
+        assert cr.coord == "D2:G5"
+
+
+    def test_move_range_left(self, dummy_worksheet):
+        ws = dummy_worksheet
+        cr = CellRange("D2:E5")
+        ws.move_range(cr, cols=-2)
+        assert ws['B2'].value == "D2"
+        assert cr.coord == "B2:C5"
+
+
+    def test_move_empty_range(self, dummy_worksheet):
+        ws = dummy_worksheet
+        cr = CellRange("A7:E15")
+        ws.move_range(cr, rows=-2)
+        assert ws['A6'].value is None
+        assert cr.coord == "A5:E13"
+
+
+    def test_move_range_from_string(self, dummy_worksheet):
+        ws = dummy_worksheet
+        ws.move_range("B2:E5", rows=2)
+        assert ws['B4'].value == "B2"
+
+
+    def test_move_range_with_formula(self, dummy_worksheet):
+        ws = dummy_worksheet
+        ws['G4'] = "=SUM(G1:G3)"
+        ws.move_range("G4", 1, 1, True)
+        assert ws['H5'].value == "=SUM(H2:H4)"

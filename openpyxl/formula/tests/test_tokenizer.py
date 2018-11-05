@@ -222,16 +222,31 @@ class TestTokenizer(object):
           (',', OP_IN, ""),
           ('$C:$C', OPERAND, RANGE)]),
 
+        ('=3 +1-5',
+         [('3', 'OPERAND', 'NUMBER'),
+          (' ', 'WHITE-SPACE', ''),
+          ('+', 'OPERATOR-INFIX', ''),
+          ('1', 'OPERAND', 'NUMBER'),
+          ('-', 'OPERATOR-INFIX', ''),
+          ('5', 'OPERAND', 'NUMBER')]),
+
         ("Just text", [("Just text", LITERAL, "")]),
         ("123.456", [("123.456", LITERAL, "")]),
         ("31/12/1999", [("31/12/1999", LITERAL, "")]),
         ("", []),
+
+        ('=A1+\nA2',
+         [('A1', OPERAND, RANGE ),
+          ('+', OP_IN, ''),
+          ('\n', WSPACE, ''),
+          ('A2', OPERAND, RANGE )]),
     ])
     def test_parse(self, tokenizer, formula, tokens):
         tok = tokenizer.Tokenizer(formula)
         result = [(token.value, token.type, token.subtype)
                   for token in tok.items]
         assert result == tokens
+        assert tok.render() == formula
 
     @pytest.mark.parametrize('formula, offset, result', [
         ('"spamspamspam"spam', 0, '"spamspamspam"'),
@@ -316,15 +331,16 @@ class TestTokenizer(object):
         with pytest.raises(tokenizer.TokenizerError):
             tok._parse_error()
 
-    @pytest.mark.parametrize('formula', [' ' * i for i in range(1, 10)])
-    def test_parse_whitespace(self, tokenizer, formula):
+    @pytest.mark.parametrize('formula, value',
+        [(' ' * i, ' ') for i in range(1, 10)] + [('\n', '\n')])
+    def test_parse_whitespace(self, tokenizer, formula, value):
         tok = tokenizer.Tokenizer(formula)
         tok.offset = 0
         del tok.items[:]
         assert tok._parse_whitespace() == len(formula)
         assert len(tok.items) == 1
         token = tok.items[0]
-        assert token.value == " "
+        assert token.value == value
         assert token.type == WSPACE
         assert token.subtype == ""
         assert not tok.token
@@ -589,3 +605,34 @@ class TestToken(object):
         assert token.value == ';'
         assert token.type == SEP
         assert token.subtype == ROW
+
+    @pytest.mark.parametrize('formula, tokens', [
+        ("SUM(Inputs!$W$111:'Input 1'!W111)",
+         [("SUM(Inputs!$W$111:'Input 1'!W111)", 'LITERAL', '')]),
+
+        ("=SUM('Inputs 1'!$W$111:'Input 1'!W111)",
+         [('SUM(', 'FUNC', 'OPEN'),
+          ("'Inputs 1'!$W$111:'Input 1'!W111", 'OPERAND', 'RANGE'),
+          (')', 'FUNC', 'CLOSE')]),
+
+        ("=SUM(Inputs!$W$111:'Input 1'!W111)",
+         [('SUM(', 'FUNC', 'OPEN'),
+          ("Inputs!$W$111:'Input 1'!W111", 'OPERAND', 'RANGE'),
+          (')', 'FUNC', 'CLOSE')]),
+
+        ("=SUM(Inputs!$W$111:'Input ''\"1'!W111)",
+         [('SUM(', 'FUNC', 'OPEN'),
+          ("Inputs!$W$111:'Input ''\"1'!W111", 'OPERAND', 'RANGE'),
+          (')', 'FUNC', 'CLOSE')]),
+
+        ("=SUM(Inputs!$W$111:Input1!W111)",
+         [('SUM(', 'FUNC', 'OPEN'),
+          ('Inputs!$W$111:Input1!W111', 'OPERAND', 'RANGE'),
+          (')', 'FUNC', 'CLOSE')]),
+    ])
+    def test_parse_quoted_sheet_name_in_range(self, tokenizer, formula, tokens):
+        tok = tokenizer.Tokenizer(formula)
+        result = [(token.value, token.type, token.subtype)
+                  for token in tok.items]
+        assert result == tokens
+        assert tok.render() == formula

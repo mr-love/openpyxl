@@ -77,16 +77,6 @@ Using number formats
 >>>
 >>> ws['A1'].number_format
 'yyyy-mm-dd h:mm:ss'
->>> # You can enable type inference on a case-by-case basis
->>> wb.guess_types = True
->>> # set percentage using a string followed by the percent sign
->>> ws['B1'] = '3.14%'
->>> wb.guess_types = False
->>> ws['B1'].value
-0.031400000000000004
->>>
->>> ws['B1'].number_format
-'0%'
 
 
 Using formulae
@@ -117,7 +107,9 @@ Merge / Unmerge cells
 ---------------------
 
 When you merge cells all cells but the top-left one are **removed** from the
-worksheet. See :ref:`styling-merged-cells` for information on formatting merged cells.
+worksheet. To carry the border-information of the merged cell, the boundary cells of the
+merged cell are created as MergeCells which always have the value None.
+See :ref:`styling-merged-cells` for information on formatting merged cells.
 
 .. :: doctest
 
@@ -153,7 +145,7 @@ Inserting an image
 >>> wb.save('logo.xlsx')
 
 
-Fold columns (outline)
+Fold (outline)
 ----------------------
 .. :: doctest
 
@@ -161,4 +153,5 @@ Fold columns (outline)
 >>> wb = openpyxl.Workbook()
 >>> ws = wb.create_sheet()
 >>> ws.column_dimensions.group('A','D', hidden=True)
+>>> ws.row_dimensions.group(1,10, hidden=True)
 >>> wb.save('group.xlsx')
